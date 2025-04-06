@@ -43,7 +43,7 @@ app.post("/register-product", async (req, res) => {
   }
 
   // Ensure you're using the deployed URL
-  const link = `https://nafcode-server.onrender.com/verify/${productId}`; // Replace with your deployed URL or local IP address for testing
+  const link = `https://nafcode-server.onrender.com/verify/${encodeURIComponent(productId)}`; // URL encode productId
   const qrDir = path.join(__dirname, "qr_codes");
   const qrPath = path.join(qrDir, `${productId}.png`);
 
@@ -78,9 +78,15 @@ app.post("/register-product", async (req, res) => {
 app.get("/verify/:productId", async (req, res) => {
   const { productId } = req.params;
 
+  console.log("Received productId:", productId); // Log the received productId
+
   try {
+    // Decode the productId (if it's URL-encoded)
+    const decodedProductId = decodeURIComponent(productId);
+    console.log("Decoded productId:", decodedProductId); // Log the decoded productId
+
     // Find the product by productId in the database
-    const product = await Product.findOne({ productId });
+    const product = await Product.findOne({ productId: decodedProductId });
 
     if (!product) {
       return res.status(404).send("<h1>Product not found</h1>");
