@@ -42,8 +42,8 @@ app.post("/register-product", async (req, res) => {
     return res.status(400).json({ error: "All fields are required" });
   }
 
-  // Generate the correct link for the QR code (this should be your actual verification page URL)
-  const link = `http://localhost:${process.env.PORT}/verify/${productId}`; // Using dynamic port for flexibility
+  // Ensure you're using the deployed URL
+  const link = `https://nafcode-server.onrender.com/verify/${productId}`; // Replace with your deployed URL or local IP address for testing
   const qrDir = path.join(__dirname, "qr_codes");
   const qrPath = path.join(qrDir, `${productId}.png`);
 
