@@ -1,3 +1,6 @@
+// Import dotenv to load environment variables
+require('dotenv').config();
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
@@ -12,9 +15,8 @@ app.use(bodyParser.json());
 app.use(express.static("public"));
 app.use("/qr_codes", express.static(path.join(__dirname, "qr_codes")));
 
-// MongoDB Atlas Connection (replace with your actual MongoDB URI)
-const mongoURI =
-  "mongodb+srv://marialucasbello:SaltoftheEarth01!@nafdacpro.111jtwr.mongodb.net/nafcode?retryWrites=true&w=majority&appName=nafdacpro";
+// MongoDB Atlas Connection using environment variable
+const mongoURI = process.env.MONGO_URI;
 
 mongoose
   .connect(mongoURI)
