@@ -43,7 +43,7 @@ app.post("/register-product", async (req, res) => {
   }
 
   // Generate the correct link for the QR code (this should be your actual verification page URL)
-  const link = `http://localhost:3000/verify/${productId}`; // Replace with your actual domain for production
+  const link = `http://localhost:${process.env.PORT}/verify/${productId}`; // Using dynamic port for flexibility
   const qrDir = path.join(__dirname, "qr_codes");
   const qrPath = path.join(qrDir, `${productId}.png`);
 
@@ -106,8 +106,8 @@ app.get("/verify/:productId", async (req, res) => {
   }
 });
 
-// Start server
-const PORT = 3000;
+// Start server with dynamic port
+const PORT = process.env.PORT || 3000; // Use environment port or default to 3000
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
