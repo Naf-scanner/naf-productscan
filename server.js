@@ -67,6 +67,17 @@ app.get("/verify/:productId", async (req, res) => {
   }
 });
 
+// ✅ /products route to get list of all products
+app.get("/products", async (req, res) => {
+  try {
+    const products = await Product.find(); // Fetch all products
+    res.json(products); // Return as JSON
+  } catch (error) {
+    console.error("❌ Error fetching products:", error);
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
+});
+
 // ✅ Static Routes — after dynamic routes
 app.use("/qr_codes", express.static(path.join(__dirname, "qr_codes")));
 app.use(express.static("public"));
@@ -107,17 +118,6 @@ app.post("/register-product", async (req, res) => {
     });
   } catch (error) {
     console.error("❌ QR Generation or DB Error:", error);
-    res.status(500).json({ error: "Something went wrong" });
-  }
-});
-
-// ✅ GET all registered products
-app.get("/products", async (req, res) => {
-  try {
-    const products = await Product.find({});
-    res.json(products);
-  } catch (error) {
-    console.error("❌ Error fetching products:", error);
     res.status(500).json({ error: "Something went wrong" });
   }
 });
