@@ -111,6 +111,17 @@ app.post("/register-product", async (req, res) => {
   }
 });
 
+// ✅ GET all registered products
+app.get("/products", async (req, res) => {
+  try {
+    const products = await Product.find({});
+    res.json(products);
+  } catch (error) {
+    console.error("❌ Error fetching products:", error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
 // ✅ Catch-all 404
 app.use((req, res) => {
   res.status(404).send("<h1>404 - Route Not Found</h1>");
