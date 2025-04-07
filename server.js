@@ -1,5 +1,5 @@
 // Import dotenv to load environment variables
-require('dotenv').config();
+require("dotenv").config();
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -10,20 +10,12 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static("public"));
-app.use("/qr_codes", express.static(path.join(__dirname, "qr_codes")));
 
-// MongoDB Atlas Connection using environment variable
-const mongoURI = process.env.MONGO_URI;
-
-mongoose
-  .connect(mongoURI)
-  .then(() => console.log("✅ Connected to MongoDB Atlas"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
-
-// Define product schema
+// ✅ Define product schema first
 const productSchema = new mongoose.Schema({
   name: String,
   company: String,
@@ -34,7 +26,52 @@ const productSchema = new mongoose.Schema({
 
 const Product = mongoose.model("Product", productSchema);
 
-// POST route to register a product and generate QR code
+// ✅ Connect to MongoDB
+const mongoURI = process.env.MONGO_URI;
+mongoose
+  .connect(mongoURI)
+  .then(() => console.log("✅ Connected to MongoDB Atlas"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// ✅ VERIFY route FIRST — before static routes
+app.get("/verify/:productId", async (req, res) => {
+  const { productId } = req.params;
+  console.log("Received productId:", productId);
+
+  try {
+    const decodedProductId = decodeURIComponent(productId);
+    console.log("Decoded productId:", decodedProductId);
+
+    const product = await Product.findOne({ productId: decodedProductId });
+
+    if (!product) {
+      return res.status(404).send("<h1>Product not found</h1>");
+    }
+
+    res.send(`
+      <html>
+        <head>
+          <title>Product Verification</title>
+        </head>
+        <body>
+          <h1>✅ Product Verified</h1>
+          <p><strong>Name:</strong> ${product.name}</p>
+          <p><strong>Company:</strong> ${product.company}</p>
+          <p><strong>Registered:</strong> ${product.registered ? "Yes" : "No"}</p>
+        </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error("❌ Product verification error:", error);
+    res.status(500).send("<h1>Something went wrong</h1>");
+  }
+});
+
+// ✅ Static Routes — after dynamic routes
+app.use("/qr_codes", express.static(path.join(__dirname, "qr_codes")));
+app.use(express.static("public"));
+
+// ✅ Register Product Route
 app.post("/register-product", async (req, res) => {
   const { name, company, productId } = req.body;
 
@@ -42,8 +79,8 @@ app.post("/register-product", async (req, res) => {
     return res.status(400).json({ error: "All fields are required" });
   }
 
-  // Ensure you're using the deployed URL
-  const link = `https://nafcode-server.onrender.com/verify/${encodeURIComponent(productId)}`; // URL encode productId
+  const encodedId = encodeURIComponent(productId);
+  const link = `https://nafcode-server.onrender.com/verify/${encodedId}`;
   const qrDir = path.join(__dirname, "qr_codes");
   const qrPath = path.join(qrDir, `${productId}.png`);
 
@@ -74,46 +111,13 @@ app.post("/register-product", async (req, res) => {
   }
 });
 
-// GET route to verify product using productId from the QR code
-app.get("/verify/:productId", async (req, res) => {
-  const { productId } = req.params;
-
-  console.log("Received productId:", productId); // Log the received productId
-
-  try {
-    // Decode the productId (if it's URL-encoded)
-    const decodedProductId = decodeURIComponent(productId);
-    console.log("Decoded productId:", decodedProductId); // Log the decoded productId
-
-    // Find the product by productId in the database
-    const product = await Product.findOne({ productId: decodedProductId });
-
-    if (!product) {
-      return res.status(404).send("<h1>Product not found</h1>");
-    }
-
-    // Send a dynamic HTML response with the product details
-    res.send(`
-      <html>
-        <head>
-          <title>Product Verification</title>
-        </head>
-        <body>
-          <h1>Product Verified</h1>
-          <p><strong>Name:</strong> ${product.name}</p>
-          <p><strong>Company:</strong> ${product.company}</p>
-          <p><strong>Registered:</strong> ${product.registered ? "Yes" : "No"}</p>
-        </body>
-      </html>
-    `);
-  } catch (error) {
-    console.error("❌ Product verification error:", error);
-    res.status(500).send("<h1>Something went wrong</h1>");
-  }
+// ✅ Catch-all 404
+app.use((req, res) => {
+  res.status(404).send("<h1>404 - Route Not Found</h1>");
 });
 
-// Start server with dynamic port
-const PORT = process.env.PORT || 3000; // Use environment port or default to 3000
+// ✅ Start server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
